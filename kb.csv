@@ -1,0 +1,72 @@
+Driver(Max_Verstappen)
+Driver(Lewis_Hamilton)
+Driver(Michael_Schumacher)
+Driver(Charles_Leclerc)
+Driver(Lando_Norris)
+Driver(Fernando_Alonso)
+Driver(Carlos_Sainz)
+Driver(Oscar_Piastri)
+Driver(George_Russell)
+Driver(Sebastian_Vettel)
+Team(Red_Bull)
+Team(Mercedes)
+Team(Ferrari)
+Team(McLaren)
+Team(Aston_Martin)
+"DrivesFor(Max_Verstappen,Red_Bull)"
+"DrivesFor(Lewis_Hamilton,Mercedes)"
+"DrivesFor(Charles_Leclerc,Ferrari)"
+"DrivesFor(Lando_Norris,McLaren)"
+"DrivesFor(Fernando_Alonso,Aston_Martin)"
+"DrivesFor(Carlos_Sainz,Ferrari)"
+"DrivesFor(Oscar_Piastri,McLaren)"
+"DrivesFor(George_Russell,Mercedes)"
+"all x y.(WinsChampionship(x,y) & Driver(x) -> Champion(x,y))"
+all x.(Dutch(x) -> European(x))
+all x.(British(x) -> European(x))
+all x.(German(x) -> European(x))
+all x.(Spanish(x) -> European(x))
+all x.(Monegasque(x) -> European(x))
+all x.(Dutch(x) -> -British(x))
+all x.(British(x) -> -Dutch(x))
+Dutch(Max_Verstappen)
+British(Lewis_Hamilton)
+British(George_Russell)
+British(Lando_Norris)
+German(Michael_Schumacher)
+German(Sebastian_Vettel)
+Monegasque(Charles_Leclerc)
+Spanish(Fernando_Alonso)
+Spanish(Carlos_Sainz)
+"WinsChampionship(Max_Verstappen,2024)"
+"WinsChampionship(Max_Verstappen,2023)"
+"WinsChampionship(Max_Verstappen,2022)"
+"WinsChampionship(Max_Verstappen,2021)"
+"WinsChampionship(Lewis_Hamilton,2020)"
+"WinsChampionship(Lewis_Hamilton,2017)"
+"WinsChampionship(Sebastian_Vettel,2013)"
+"WinsChampionship(Michael_Schumacher,2004)"
+Circuit(Monaco)
+Circuit(Silverstone)
+Circuit(Monza)
+Circuit(Spa)
+"HostedAt(Monaco_GP,Monaco)"
+"HostedAt(British_GP,Silverstone)"
+"HostedAt(Italian_GP,Monza)"
+"HostedAt(Belgian_GP,Spa)"
+Race(Monaco_GP)
+Race(British_GP)
+Race(Italian_GP)
+Race(Belgian_GP)
+"all x y.(DrivesFor(x,y) & Team(y) -> DriverForTeam(x,y))"
+"all x y.(HostedAt(x,y) & Circuit(y) -> RaceAtCircuit(x,y))"
+"DrivesFor(Sergio_Perez,Red_Bull)"
+Fast(Lando_Norris)
+Not_Max_Verstappen(American)
+Driver(Hamilton)
+In_Italy(Ferrari)
+Located_In_Italy(Ferrari)
+"DrivesFor(Oscar_Piastri,Mclaren)"
+British_Gp(George_Russell)
+Australian(Oscar_Piastri)
+British_Gp(Max_Verstappen)

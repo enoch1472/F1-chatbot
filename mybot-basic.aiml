@@ -1,0 +1,129 @@
+<aiml version="1.0.1" encoding="UTF-8">
+<category><pattern>HELLO</pattern>
+  <template>Hello! I'm your F1 chatbot. Ask me about Formula 1 - drivers, teams, circuits, or anything F1!</template></category>
+<category><pattern>HELLO *</pattern>
+  <template><srai>HELLO</srai></template></category>
+<category><pattern>HI</pattern>
+  <template><srai>HELLO</srai></template></category>
+<category><pattern>HI *</pattern>
+  <template><srai>HELLO</srai></template></category>
+<category><pattern>HOW ARE YOU</pattern>
+  <template>I'm functioning within normal parameters, thanks for asking. What would you like to know about F1?</template></category>
+<category><pattern>I AM FINE</pattern>
+  <template>That's good to know. What would you like to discuss about F1?</template></category>
+<category><pattern>BYE</pattern>
+  <template>#0$Goodbye! See you at the next Grand Prix!</template></category>
+<category><pattern>GOODBYE</pattern>
+  <template><srai>BYE</srai></template></category>
+<category><pattern>EXIT</pattern>
+  <template><srai>BYE</srai></template></category>
+<category><pattern>THANKS</pattern>
+  <template>You're welcome! Feel free to ask more F1 questions anytime.</template></category>
+<category><pattern>THANK YOU</pattern>
+  <template><srai>THANKS</srai></template></category>
+<category><pattern>CHEERS</pattern>
+  <template>Sure mate!</template></category>
+<category><pattern>CHEERS *</pattern>
+  <template>Sure mate!</template></category>
+<category><pattern>WHAT IS F1</pattern>
+  <template>Formula 1 is the pinnacle of motorsport, featuring single-seater cars racing worldwide since 1950.</template></category>
+<category><pattern>WHO IS THE CURRENT F1 WORLD CHAMPION</pattern>
+  <template>Max Verstappen is the reigning Formula 1 World Champion, having won four consecutive titles from 2021 to 2024.</template></category>
+<category><pattern>WHAT TEAM DOES LANDO NORRIS DRIVE FOR</pattern>
+  <template>Lando Norris drives for McLaren in Formula 1.</template></category>
+<category><pattern>TELL ME ABOUT THE MONACO GRAND PRIX</pattern>
+  <template>The Monaco Grand Prix is one of the most prestigious races in the world, held on the streets of Monte Carlo. It is famous for its tight corners, narrow barriers, and glamorous setting.</template></category>
+<category><pattern>WHAT DOES DRS STAND FOR</pattern>
+  <template>DRS stands for Drag Reduction System. It is a movable rear wing that reduces aerodynamic drag on straights to assist overtaking.</template></category>
+<category><pattern>HOW FAST DO F1 CARS GO</pattern>
+  <template>F1 cars can reach speeds over 370 km/h (230 mph) on long straights like Monza.</template></category>
+<category><pattern>WHAT IS PIT STOP IN F1</pattern>
+  <template>A pit stop is when a car enters the pit lane for tire changes, fuel, or repairs during a race.</template></category>
+<category><pattern>WHAT CIRCUITS ARE IN F1</pattern>
+  <template>Iconic circuits include Monaco, Silverstone, Monza, Spa-Francorchamps, Suzuka, and Interlagos.</template></category>
+<category><pattern>BEST F1 DRIVER EVER</pattern>
+  <template>Debatable, but Michael Schumacher and Lewis Hamilton both hold the record with 7 titles each.</template></category>
+<category><pattern>FASTEST F1 LAP RECORD</pattern>
+  <template>Lewis Hamilton holds the all-time fastest lap at Monza in 2020 at 1:18.887.</template></category>
+<category><pattern>WHAT ARE F1 TIRES</pattern>
+  <template>Pirelli supplies F1 tires in compounds: C1 (hardest) to C5 (softest), plus wet and intermediate tires.</template></category>
+<category><pattern>HOW OLD IS F1</pattern>
+  <template>The first Formula 1 World Championship race was held in 1950 at Silverstone, making F1 over 75 years old.</template></category>
+<category><pattern>WHAT IS THE F1 KAGGLE DATASET</pattern>
+  <template>The main one is 'Formula 1 World Championship (1950-2024)' with CSVs on races, drivers, results, and more.</template></category>
+<category><pattern>HOW MANY RACES IN * SEASON</pattern>
+  <template>The <star/> season typically has around 24 races. The exact count varies year to year.</template></category>
+<category><pattern>WHAT IS * IN F1</pattern>
+  <template><star/> is an important concept in Formula 1. Could you be more specific so I can give you a detailed answer?</template></category>
+<category><pattern>I LIKE *</pattern>
+  <template>Great choice! <star/> is a fantastic part of Formula 1. Want to know more?</template></category>
+<category><pattern>IS * A GOOD DRIVER</pattern>
+  <template><star/> is rated in F1. Try asking "How likely is [driver] to win the championship" for a fuzzy analysis!</template></category>
+<category><pattern>I KNOW THAT * IS *</pattern>
+  <template>#31$<star index="1"/> is <star index="2"/></template></category>
+<category><pattern>I KNOW THAT * DRIVES FOR *</pattern>
+  <template>#31$<star index="1"/> drives for <star index="2"/></template></category>
+<category><pattern>CHECK THAT * IS *</pattern>
+  <template>#32$<star index="1"/> is <star index="2"/></template></category>
+<category><pattern>CHECK THAT * DRIVES FOR *</pattern>
+  <template>#32$<star index="1"/> drives for <star index="2"/></template></category>
+<category><pattern>CLASSIFY IMAGE</pattern>
+  <template>#40$classify</template></category>
+<category><pattern>WHAT IS IN THIS IMAGE</pattern>
+  <template>#40$classify</template></category>
+<category><pattern>IDENTIFY THIS IMAGE</pattern>
+  <template>#40$classify</template></category>
+<category><pattern>CLASSIFY THIS IMAGE</pattern>
+  <template>#40$classify</template></category>
+<category><pattern>WHAT CAR IS THIS</pattern>
+  <template>#40$classify</template></category>
+<category><pattern>CLASSIFY THIS F1 CAR</pattern>
+  <template>#40$classify</template></category>
+<category><pattern>HOW LIKELY IS * TO WIN THE CHAMPIONSHIP</pattern>
+  <template>#50$<star/></template></category>
+<category><pattern>HOW LIKELY SKILL * EXPERIENCE *</pattern>
+  <template>#51$skill <star index="1"/> experience <star index="2"/></template></category>
+<category><pattern>HOW LIKELY * SKILL * EXPERIENCE *</pattern>
+  <template>#51$skill <star index="2"/> experience <star index="3"/></template></category>
+<category><pattern>TELL ME ABOUT *</pattern>
+  <template>#99$<star/></template></category>
+<category><pattern>WHO DRIVES FOR *</pattern>
+  <template>#99$who drives for <star/></template></category>
+<category><pattern>WHAT TEAM IS * ON</pattern>
+  <template>#99$what team is <star/> on</template></category>
+<category><pattern>WHO WON THE * GRAND PRIX</pattern>
+  <template>#99$who won the <star/> grand prix</template></category>
+<category><pattern>WHEN DID * WIN THE CHAMPIONSHIP</pattern>
+  <template>#99$when did <star/> win the championship</template></category>
+<category><pattern>WHERE IS THE * GRAND PRIX HELD</pattern>
+  <template>#99$where is the <star/> grand prix held</template></category>
+<category><pattern>EXPLAIN * TO ME</pattern>
+  <template>#99$<star/></template></category>
+<category><pattern>COMPARE * AND *</pattern>
+  <template>#99$compare <star index="1"/> and <star index="2"/></template></category>
+<category><pattern>CLOUD ANALYZE IMAGE</pattern>
+  <template>#81$cloud</template></category>
+<category><pattern>AZURE ANALYSIS</pattern>
+  <template>#81$cloud</template></category>
+<category><pattern>AZURE CLASSIFY THIS IMAGE</pattern>
+  <template>#81$cloud</template></category>
+<category><pattern>AZURE ANALYSE THIS CAR</pattern>
+  <template>#81$cloud</template></category>
+<category><pattern>AZURE ANALYZE CAR</pattern>
+  <template>#81$cloud</template></category>
+<category><pattern>OPTIMIZE RACE CALENDAR</pattern>
+  <template>#60$optimize</template></category>
+<category><pattern>WHAT IS THE BEST ORDER FOR RACES</pattern>
+  <template>#60$optimize</template></category>
+
+<category><pattern>HOW DO I FEEL</pattern>
+  <template>#75$sentiment</template></category>
+<category><pattern>DO YOU THINK I AM HAPPY</pattern>
+  <template>#75$sentiment</template></category>
+<category><pattern>DO YOU THINK I AM SAD</pattern>
+  <template>#75$sentiment</template></category>
+<category><pattern>HELP</pattern>
+  <template>I can help with F1! Try: "What is F1", "I know that X is Y", "classify image", "How likely is Verstappen to win the championship", "optimize race calendar", "how do I feel", "cloud analyze image", or "tell me a story about [topic]".</template></category>
+<category><pattern>*</pattern>
+  <template>#99$<star index="1"/></template></category>
+</aiml>
