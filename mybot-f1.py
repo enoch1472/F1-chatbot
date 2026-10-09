@@ -1,5 +1,4 @@
-# My F1 Chatbot Implementation - ISYS30221 Artificial Intelligence Coursework
-# Written by Enoch Obikoya (T0433803)
+# F1 Chatbot - ISYS30221 Artificial Intelligence Coursework - Enoch Obikoya (T0433803)
 import os
 import warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
@@ -11,18 +10,50 @@ from nltk.stem import WordNetLemmatizer
 import numpy as np
 import csv
 import re
+import time
+if not hasattr(time, 'clock'):
+    time.clock = time.perf_counter
 import aiml
 import pandas
 import tkinter as tk
 from tkinter import filedialog
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-tf.get_logger().setLevel('ERROR')
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model
+    from tensorflow.keras.preprocessing import image
+    tf.get_logger().setLevel('ERROR')
+except ImportError:
+    tf = None
+    load_model = None
+    image = None
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import my_azure_cognitve
-import transformer_nlp
+try:
+    import my_azure_cognitve
+except ImportError:
+    my_azure_cognitve = None
+try:
+    import transformer_nlp
+except ImportError:
+    transformer_nlp = None
+
+def get_sentiment(text):
+    if transformer_nlp is not None and hasattr(transformer_nlp, 'analyze_sentiment'):
+        return transformer_nlp.analyze_sentiment(text)
+    text = text.lower()
+    score = 0
+    words = text.split()
+    for w in words:
+        if w in {'great', 'win', 'champion', 'fast', 'amazing', 'happy', 'love', 'perfect', 'best'}: score += 1
+        if w in {'bad', 'crash', 'fail', 'slow', 'sad', 'hate', 'lose', 'worst', 'terrible'}: score -= 1
+    if score > 0: return "Positive"
+    elif score < 0: return "Negative"
+    else: return "Neutral"
+
+def get_commentary(seed):
+    if transformer_nlp is not None and hasattr(transformer_nlp, 'generate_f1_commentary'):
+        return transformer_nlp.generate_f1_commentary(seed)
+    return "Formula 1 is the pinnacle of motorsport, featuring single-seater cars racing worldwide since 1950."
 try:
     import sys
     orig_out, orig_err = sys.stdout, sys.stderr
@@ -44,8 +75,6 @@ nltk.download('averaged_perceptron_tagger_eng', quiet=True)
 nltk.download('omw-1.4', quiet=True)
 read_expr = Expression.fromstring
 lemmatizer = WordNetLemmatizer()
-# Task B: Symbolic Knowledge Representation. 
-# I am initializing my knowledge base from kb.csv using First-Order Logic expressions.
 kb = []
 data = pandas.read_csv('kb.csv', header=None)
 for row in data[0]:
@@ -55,6 +84,18 @@ for row in data[0]:
             kb.append(read_expr(row))
         except Exception as e:
             print(f"Warning: Could not parse KB expression: {row} ({e})")
+if os.path.exists('user_facts.csv'):
+    try:
+        udata = pandas.read_csv('user_facts.csv', header=None)
+        for row in udata[0]:
+            row = str(row).strip()
+            if row:
+                try:
+                    kb.append(read_expr(row))
+                except Exception:
+                    pass
+    except Exception:
+        pass
 def run_forward_chaining():
     added = True
     while added:
@@ -63,9 +104,9 @@ def run_forward_chaining():
             s = str(expr)
             if s.startswith("DrivesFor(") and "," in s:
                 driver, team = s[10:-1].split(',')
-                loc_expr = read_expr(f"LocatedIn({team}, Italy)")
+                loc_expr = read_expr(f"LocatedIn({team.strip()}, Italy)")
                 if loc_expr in kb:
-                    new_expr = read_expr(f"DrivesForItalianTeam({driver})")
+                    new_expr = read_expr(f"DrivesForItalianTeam({driver.strip()})")
                     if new_expr not in kb:
                         kb.append(new_expr)
                         added = True
@@ -76,7 +117,9 @@ def get_kb_aliases():
         s = str(expr)
         match = re.search(r'\(([^,)]+)', s)
         if match:
-            full_name = match.group(1)
+            full_name = match.group(1).strip()
+            if full_name.endswith("_GP") or full_name in {'Driver', 'Team', 'Circuit', 'Race'}:
+                continue
             if "_" in full_name:
                 parts = full_name.split("_")
                 for p in parts:
@@ -96,6 +139,10 @@ def resolve_alias(fact_str):
 def parse_fact(text):
     text = resolve_alias(text)                                               
     text = text.strip()
+    m_it = re.match(r'^(.+?)\s+drives\s+for\s+an?\s+italian\s+team$', text, re.IGNORECASE)
+    if m_it:
+        driver = resolve_alias(m_it.group(1).strip()).title().replace(' ', '_')
+        return f"DrivesForItalianTeam({driver})"
     m = re.match(r'^(.+?)\s+is\s+an?\s+(.+)$', text, re.IGNORECASE)
     if m:
         return f"{m.group(2).strip().title().replace(' ', '_')}({m.group(1).strip().title().replace(' ', '_')})"
@@ -106,13 +153,40 @@ def parse_fact(text):
     if m:
         return f"DrivesFor({m.group(1).strip().title().replace(' ', '_')},{m.group(2).strip().title().replace(' ', '_')})"
     raise ValueError("Format: X is Y, or X drives for Y")
+def _get_drives_for(driver_canonical):
+    """Return the team a driver drives for in the KB, or None."""
+    for expr in kb:
+        s = str(expr)
+        if s.startswith("DrivesFor(") and "," in s:
+            inner = s[len("DrivesFor("):-1]
+            parts = inner.split(",", 1)
+            if len(parts) == 2 and parts[0].strip() == driver_canonical:
+                return parts[1].strip()
+    return None
+
+def _known_entities():
+    """Return all constants that appear as subject of any KB fact."""
+    entities = set()
+    for expr in kb:
+        s = str(expr)
+        m = re.match(r'^[A-Za-z_]+\(([^,)]+)', s)
+        if m:
+            entities.add(m.group(1).strip())
+    return entities
+
 def check_fact(fact_str):
     try:
         logic_str = parse_fact(fact_str)
         expr = read_expr(logic_str)
         neg_expr = read_expr(f"-({logic_str})")
-        # I use the NLTK ResolutionProver to perform a proof by contradiction, 
-        # verifying if a fact logically follows from my existing rules.
+        if logic_str.startswith("DrivesFor("):
+            inner = logic_str[len("DrivesFor("):-1]
+            parts = inner.split(",", 1)
+            if len(parts) == 2:
+                driver_c, claimed_team = parts[0].strip(), parts[1].strip()
+                actual_team = _get_drives_for(driver_c)
+                if actual_team is not None:
+                    return "Correct." if actual_team == claimed_team else "Incorrect."
         if ResolutionProver().prove(expr, kb, verbose=False):
             return "Correct."
         elif ResolutionProver().prove(neg_expr, kb, verbose=False):
@@ -121,20 +195,34 @@ def check_fact(fact_str):
             return "Sorry, I don't know."
     except Exception as e:
         return f"Could not process that: {e}"
+
 def add_fact(fact_str):
     try:
         ls = parse_fact(fact_str)
         f = read_expr(ls)
-        neg_f = read_expr(f"-({ls})")
+        m_subject = re.match(r'^[A-Za-z_]+\(([^,)]+)', ls)
+        if m_subject:
+            subject = m_subject.group(1).strip()
+            if subject not in _known_entities():
+                return (f"I don't recognise '{subject.replace('_', ' ')}'. "
+                        "I can only learn facts about entities already in my knowledge base.")
+        if ls.startswith("DrivesFor("):
+            inner = ls[len("DrivesFor("):-1]
+            parts = inner.split(",", 1)
+            if len(parts) == 2:
+                driver_c, claimed_team = parts[0].strip(), parts[1].strip()
+                actual_team = _get_drives_for(driver_c)
+                if actual_team is not None:
+                    if actual_team == claimed_team:
+                        return "I already know that."
+                    else:
+                        return (f"Sorry, that contradicts what I already know! "
+                                f"({driver_c.replace('_', ' ')} drives for {actual_team})")
         if ResolutionProver().prove(f, kb, verbose=False):
             return "I already know that."
-        if ResolutionProver().prove(neg_f, kb, verbose=False):
-            # I implemented this safety check to prevent the knowledge base from corruption.
-            # It blocks any information that contradicts my mutual exclusivity rules.
-            return "Sorry, that contradicts what I already know!"
         kb.append(f)
         run_forward_chaining()
-        with open("kb.csv", "a", newline='') as file:
+        with open("user_facts.csv", "a", newline='') as file:
             writer = csv.writer(file)
             writer.writerow([ls])
         if " drives for " in fact_str.lower():
@@ -163,15 +251,12 @@ except Exception:
 def preprocess(text):
     text = normalise(text)
     tokens = nltk.word_tokenize(text)
-    # I use the WordNetLemmatizer here to normalize user input for better matching.
     return ' '.join(lemmatizer.lemmatize(t) for t in tokens)
 preprocessed_qa = {preprocess(q): a for q, a in qa.items()}
 corpus_queries = list(preprocessed_qa.keys())
 tfidf_vectorizer = None
 tfidf_matrix = None
 if corpus_queries:
-    # Task A: For open-ended questions, I built a TF-IDF and Cosine Similarity model.
-    # I vectorize my qa.csv dataset to represent my knowledge in a numerical format.
     tfidf_vectorizer = TfidfVectorizer()
     tfidf_matrix = tfidf_vectorizer.fit_transform(corpus_queries)
     print(f"Loaded {len(corpus_queries)} Q/A pairs.")
@@ -182,30 +267,40 @@ def similarity_match(user_input, threshold=0.4):
     query_vec = tfidf_vectorizer.transform([processed])
     similarities = cosine_similarity(query_vec, tfidf_matrix)[0]
     max_idx = np.argmax(similarities)
-    # I've tuned my similarity threshold to 0.7 to ensure high-precision results.
     if similarities[max_idx] > threshold:
         return preprocessed_qa[corpus_queries[max_idx]]
     return None
 driver_profiles = {
     'verstappen': (9, 10), 'max verstappen': (9, 10),
-    'hamilton': (9, 18), 'lewis hamilton': (9, 18),
-    'leclerc': (8, 8), 'charles leclerc': (8, 8),
-    'norris': (8, 6), 'lando norris': (8, 6),
-    'alonso': (7, 20), 'fernando alonso': (7, 20),
+    'perez': (7, 13), 'sergio perez': (7, 13),
+    'hamilton': (9, 17), 'lewis hamilton': (9, 17),
     'russell': (8, 5), 'george russell': (8, 5),
-    'sainz': (7, 8), 'carlos sainz': (7, 8),
-    'piastri': (7, 3), 'oscar piastri': (7, 3),
+    'leclerc': (8, 7), 'charles leclerc': (8, 7),
+    'sainz': (7, 9), 'carlos sainz': (7, 9),
+    'norris': (8, 6), 'lando norris': (8, 6),
+    'piastri': (7, 2), 'oscar piastri': (7, 2),
+    'alonso': (7, 20), 'fernando alonso': (7, 20),
+    'stroll': (5, 7), 'lance stroll': (5, 7),
+    'gasly': (6, 7), 'pierre gasly': (6, 7),
+    'ocon': (6, 7), 'esteban ocon': (6, 7),
+    'albon': (6, 5), 'alexander albon': (6, 5),
+    'sargeant': (4, 2), 'logan sargeant': (4, 2),
+    'tsunoda': (6, 4), 'yuki tsunoda': (6, 4),
+    'ricciardo': (7, 13), 'daniel ricciardo': (7, 13),
+    'hulkenberg': (6, 10), 'nico hulkenberg': (6, 10),
+    'magnussen': (5, 9), 'kevin magnussen': (5, 9),
+    'bottas': (6, 11), 'valtteri bottas': (6, 11),
+    'zhou': (5, 3), 'zhou guanyu': (5, 3),
+    # Historical legends
     'vettel': (7, 16), 'sebastian vettel': (7, 16),
     'schumacher': (10, 19), 'michael schumacher': (10, 19),
 }
-# Task B Extra: My Mamdani Fuzzy System for predicting championship outcomes.
-# I map linguistic variables like 'Good Skill' and 'High Experience' to a likelihood score.
 def fuzzy_championship_likelihood(skill_val, experience_val):
     import sys
     orig_out, orig_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = open(os.devnull, 'w')
     try:
-        FS = sf.FuzzySystem(show_warnings=False)
+        FS = sf.FuzzySystem(show_banner=False)
     except:
         FS = sf.FuzzySystem()
     finally:
@@ -235,35 +330,105 @@ def fuzzy_championship_likelihood(skill_val, experience_val):
     ])
     FS.set_variable("Skill", skill_val)
     FS.set_variable("Experience", experience_val)
-    if skill_val == 9 and experience_val == 10: return 82.4
-    if skill_val == 9 and experience_val == 18: return 68.1
-    if skill_val == 7 and experience_val == 20: return 54.3
-    if skill_val == 5 and experience_val == 5: return 28.7
-    if skill_val == 9 and experience_val == 20: return 91.2
     result = FS.Mamdani_inference(["Likelihood"])
     return result["Likelihood"]
 
 class RaceCalendarOptimizer:
-    def __init__(self, locations=None):
+    """
+    Genetic Algorithm (GA) optimizer for the Travelling Salesperson Problem (TSP)
+    applied to ordering Formula 1 Grand Prix calendar locations to minimise total travel distance.
+    """
+    def __init__(self, locations=None, names=None, pop_size=50, generations=100, mutation_rate=0.15, elite_size=2):
         self.locations = locations or [
             (0,0), (10,50), (40,20), (80,70), (20,90), (60,10)
         ]
-        self.names = ["Silverstone", "Monaco", "Monza", "Spa", "Suzuka", "Interlagos"]
-
-    def optimize(self):
-        import random
-        best_order = list(range(len(self.locations)))
-        random.shuffle(best_order)
-        dist = self.calculate_total_dist(best_order)
-        return [self.names[i] for i in best_order], dist
+        self.names = names or ["Silverstone", "Monaco", "Monza", "Spa", "Suzuka", "Interlagos"]
+        self.pop_size = pop_size
+        self.generations = generations
+        self.mutation_rate = mutation_rate
+        self.elite_size = elite_size
 
     def calculate_total_dist(self, order):
-        d = 0
-        for i in range(len(order)):
+        d = 0.0
+        n = len(order)
+        for i in range(n):
             c1 = self.locations[order[i]]
-            c2 = self.locations[order[(i+1)%len(order)]]
+            c2 = self.locations[order[(i+1) % n]]
             d += np.hypot(c1[0]-c2[0], c1[1]-c2[1])
         return d
+
+    def _crossover_ox(self, parent1, parent2):
+        """Order Crossover (OX) preserving permutation validity for TSP."""
+        import random
+        size = len(parent1)
+        a, b = sorted(random.sample(range(size), 2))
+        child = [None] * size
+        child[a:b+1] = parent1[a:b+1]
+        
+        current_idx = (b + 1) % size
+        for gene in parent2[b+1:] + parent2[:b+1]:
+            if gene not in child:
+                child[current_idx] = gene
+                current_idx = (current_idx + 1) % size
+        return child
+
+    def _mutate(self, order):
+        """Inversion (2-opt style) mutation to reverse an edge sub-sequence."""
+        import random
+        if random.random() < self.mutation_rate:
+            a, b = sorted(random.sample(range(len(order)), 2))
+            order[a:b+1] = reversed(order[a:b+1])
+        return order
+
+    def _tournament_select(self, population, k=3):
+        """Tournament selection selecting the tour with the lowest travel distance."""
+        import random
+        selected = random.sample(population, k)
+        return min(selected, key=self.calculate_total_dist)
+
+    def optimize(self):
+        """
+        Executes the Genetic Algorithm:
+        - Population initialization with random permutation tours
+        - Generational evolution with Elitism, OX crossover, and inversion mutation
+        - Returns the best circuit order and minimum total distance found.
+        """
+        import random
+        n = len(self.locations)
+        if n <= 1:
+            return self.names, 0.0
+
+        base = list(range(n))
+        population = [random.sample(base, n) for _ in range(self.pop_size)]
+
+        best_individual = min(population, key=self.calculate_total_dist)
+        best_dist = self.calculate_total_dist(best_individual)
+
+        for _ in range(self.generations):
+            population.sort(key=self.calculate_total_dist)
+            current_best = population[0]
+            current_best_dist = self.calculate_total_dist(current_best)
+            if current_best_dist < best_dist:
+                best_dist = current_best_dist
+                best_individual = current_best[:]
+
+            next_pop = [population[i][:] for i in range(self.elite_size)]
+
+            while len(next_pop) < self.pop_size:
+                p1 = self._tournament_select(population)
+                p2 = self._tournament_select(population)
+                child = self._crossover_ox(p1, p2)
+                child = self._mutate(child)
+                next_pop.append(child)
+
+            population = next_pop
+
+        population.sort(key=self.calculate_total_dist)
+        if self.calculate_total_dist(population[0]) < best_dist:
+            best_dist = self.calculate_total_dist(population[0])
+            best_individual = population[0]
+
+        return [self.names[i] for i in best_individual], best_dist
 
 
 try:
@@ -272,8 +437,6 @@ try:
                'Mercedes', 'Racing Point', 'Red Bull', 'Renault', 'Williams']
 except Exception as e:
     model = None
-# Task C: I developed this fuzzy logic system to categorize my CNN's Softmax probabilities
-# into human-readable confidence labels like 'High', 'Medium', or 'Low'.
 def fuzzy_classification_confidence(prob_val):
     if not FUZZY_ENABLED:
         return prob_val * 100, "N/A"
@@ -281,7 +444,7 @@ def fuzzy_classification_confidence(prob_val):
     orig_out, orig_err = sys.stdout, sys.stderr
     sys.stdout = sys.stderr = open(os.devnull, 'w')
     try:
-        FS = sf.FuzzySystem(show_warnings=False)
+        FS = sf.FuzzySystem(show_banner=False)
     except:
         FS = sf.FuzzySystem()
     finally:
@@ -312,7 +475,9 @@ def azure_cloud_classify():
         title="Select an image for Azure Cloud Analysis",
         filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp")])
     if not path: return "No image selected."
-    return my_azure_cognitve.azure_analyze_image(path)
+    if my_azure_cognitve is not None and hasattr(my_azure_cognitve, 'azure_analyze_image'):
+        return my_azure_cognitve.azure_analyze_image(path)
+    return "Azure Vision module not available. Install azure-cognitiveservices-vision-computervision."
 
 def classify_image():
     import tensorflow as tf
@@ -403,21 +568,29 @@ while True:
             print(f"Total Travel Distance: {distance:.2f} units")
 
         elif cmd == 75:
-            sentiment = transformer_nlp.analyze_sentiment(userInput)
+            sentiment = get_sentiment(userInput)
             print(f"I sense that you are feeling: {sentiment}")
+        elif cmd == 76:
+            test_text = params[1].strip() if len(params) > 1 else userInput
+            sentiment = get_sentiment(test_text)
+            positive_words = {'great', 'win', 'champion', 'fast', 'amazing', 'happy', 'love', 'perfect', 'best'}
+            negative_words = {'bad', 'crash', 'fail', 'slow', 'sad', 'hate', 'lose', 'worst', 'terrible'}
+            found = [w for w in test_text.lower().split() if w in positive_words | negative_words]
+            detail = f" (detected keywords: {', '.join(found)})" if found else ""
+            print(f"Sentiment of \"{test_text}\": {sentiment}{detail}")
         elif cmd == 81:
             print(azure_cloud_classify())
         elif cmd == 82:
             seed = params[1].strip() if len(params) > 1 else "F1"
-            print(transformer_nlp.generate_f1_commentary(seed))
+            print(get_commentary(seed))
         elif cmd == 99:
             fallback = params[1].strip() if len(params) > 1 else userInput
-            sentiment = transformer_nlp.analyze_sentiment(fallback)
+            sentiment = get_sentiment(fallback)
             
             f_lower = fallback.lower()
             res = (qa.get(normalise(fallback))
                    or similarity_match(fallback, threshold=0.7)
-                   or transformer_nlp.generate_f1_commentary(fallback))
+                   or get_commentary(fallback))
             if sentiment == "Negative":
                 print(f"(I'm sorry to hear that...) {res}")
             else:

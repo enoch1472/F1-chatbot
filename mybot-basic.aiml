@@ -122,8 +122,16 @@
   <template>#75$sentiment</template></category>
 <category><pattern>DO YOU THINK I AM SAD</pattern>
   <template>#75$sentiment</template></category>
+<category><pattern>ANALYZE SENTIMENT *</pattern>
+  <template>#76$<star/></template></category>
+<category><pattern>ANALYSE SENTIMENT *</pattern>
+  <template>#76$<star/></template></category>
+<category><pattern>SENTIMENT OF *</pattern>
+  <template>#76$<star/></template></category>
+<category><pattern>WHAT IS THE SENTIMENT OF *</pattern>
+  <template>#76$<star/></template></category>
 <category><pattern>HELP</pattern>
-  <template>I can help with F1! Try: "What is F1", "I know that X is Y", "classify image", "How likely is Verstappen to win the championship", "optimize race calendar", "how do I feel", "cloud analyze image", or "tell me a story about [topic]".</template></category>
+  <template>I can help with F1! Try: "What is F1", "I know that X is Y", "classify image", "How likely is Verstappen to win the championship", "optimize race calendar", "how do I feel", "analyze sentiment I love racing", "cloud analyze image", or "tell me a story about [topic]".</template></category>
 <category><pattern>*</pattern>
   <template>#99$<star index="1"/></template></category>
 </aiml>

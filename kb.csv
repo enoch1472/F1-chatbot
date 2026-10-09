@@ -1,43 +1,104 @@
 Driver(Max_Verstappen)
+Driver(Sergio_Perez)
 Driver(Lewis_Hamilton)
-Driver(Michael_Schumacher)
-Driver(Charles_Leclerc)
-Driver(Lando_Norris)
-Driver(Fernando_Alonso)
-Driver(Carlos_Sainz)
-Driver(Oscar_Piastri)
 Driver(George_Russell)
+Driver(Charles_Leclerc)
+Driver(Carlos_Sainz)
+Driver(Lando_Norris)
+Driver(Oscar_Piastri)
+Driver(Fernando_Alonso)
+Driver(Lance_Stroll)
+Driver(Pierre_Gasly)
+Driver(Esteban_Ocon)
+Driver(Alexander_Albon)
+Driver(Logan_Sargeant)
+Driver(Yuki_Tsunoda)
+Driver(Daniel_Ricciardo)
+Driver(Nico_Hulkenberg)
+Driver(Kevin_Magnussen)
+Driver(Valtteri_Bottas)
+Driver(Zhou_Guanyu)
+Driver(Michael_Schumacher)
 Driver(Sebastian_Vettel)
 Team(Red_Bull)
 Team(Mercedes)
 Team(Ferrari)
 Team(McLaren)
 Team(Aston_Martin)
+Team(Alpine)
+Team(Williams)
+Team(AlphaTauri)
+Team(Haas)
+Team(Alfa_Romeo)
+Team(Sauber)
 "DrivesFor(Max_Verstappen,Red_Bull)"
+"DrivesFor(Sergio_Perez,Red_Bull)"
 "DrivesFor(Lewis_Hamilton,Mercedes)"
-"DrivesFor(Charles_Leclerc,Ferrari)"
-"DrivesFor(Lando_Norris,McLaren)"
-"DrivesFor(Fernando_Alonso,Aston_Martin)"
-"DrivesFor(Carlos_Sainz,Ferrari)"
-"DrivesFor(Oscar_Piastri,McLaren)"
 "DrivesFor(George_Russell,Mercedes)"
+"DrivesFor(Charles_Leclerc,Ferrari)"
+"DrivesFor(Carlos_Sainz,Ferrari)"
+"DrivesFor(Lando_Norris,McLaren)"
+"DrivesFor(Oscar_Piastri,McLaren)"
+"DrivesFor(Fernando_Alonso,Aston_Martin)"
+"DrivesFor(Lance_Stroll,Aston_Martin)"
+"DrivesFor(Pierre_Gasly,Alpine)"
+"DrivesFor(Esteban_Ocon,Alpine)"
+"DrivesFor(Alexander_Albon,Williams)"
+"DrivesFor(Logan_Sargeant,Williams)"
+"DrivesFor(Yuki_Tsunoda,AlphaTauri)"
+"DrivesFor(Daniel_Ricciardo,AlphaTauri)"
+"DrivesFor(Nico_Hulkenberg,Haas)"
+"DrivesFor(Kevin_Magnussen,Haas)"
+"DrivesFor(Valtteri_Bottas,Alfa_Romeo)"
+"DrivesFor(Zhou_Guanyu,Alfa_Romeo)"
+"LocatedIn(Ferrari,Italy)"
+"LocatedIn(AlphaTauri,Italy)"
+"LocatedIn(Mercedes,UK)"
+"LocatedIn(Red_Bull,UK)"
+"LocatedIn(McLaren,UK)"
+"LocatedIn(Aston_Martin,UK)"
+"LocatedIn(Alpine,UK)"
+"LocatedIn(Williams,UK)"
+"LocatedIn(Haas,USA)"
+"LocatedIn(Alfa_Romeo,Switzerland)"
+"LocatedIn(Sauber,Switzerland)"
 "all x y.(WinsChampionship(x,y) & Driver(x) -> Champion(x,y))"
-all x.(Dutch(x) -> European(x))
-all x.(British(x) -> European(x))
-all x.(German(x) -> European(x))
-all x.(Spanish(x) -> European(x))
-all x.(Monegasque(x) -> European(x))
-all x.(Dutch(x) -> -British(x))
-all x.(British(x) -> -Dutch(x))
+"all x.(Dutch(x) -> European(x))"
+"all x.(British(x) -> European(x))"
+"all x.(German(x) -> European(x))"
+"all x.(Spanish(x) -> European(x))"
+"all x.(Monegasque(x) -> European(x))"
+"all x.(Australian(x) -> Oceanic(x))"
+"all x.(Dutch(x) -> -British(x))"
+"all x.(British(x) -> -Dutch(x))"
+"all x.(Australian(x) -> -British(x))"
+"all x.(British(x) -> -Australian(x))"
+"all x.(Australian(x) -> -Dutch(x))"
+"all x.(Dutch(x) -> -Australian(x))"
+"all x y.(DrivesFor(x,y) & Team(y) -> DriverForTeam(x,y))"
+"all x y.(HostedAt(x,y) & Circuit(y) -> RaceAtCircuit(x,y))"
 Dutch(Max_Verstappen)
 British(Lewis_Hamilton)
 British(George_Russell)
 British(Lando_Norris)
 German(Michael_Schumacher)
 German(Sebastian_Vettel)
+German(Nico_Hulkenberg)
 Monegasque(Charles_Leclerc)
 Spanish(Fernando_Alonso)
 Spanish(Carlos_Sainz)
+Australian(Oscar_Piastri)
+Australian(Daniel_Ricciardo)
+Mexican(Sergio_Perez)
+French(Pierre_Gasly)
+French(Esteban_Ocon)
+Danish(Kevin_Magnussen)
+Finnish(Valtteri_Bottas)
+Chinese(Zhou_Guanyu)
+Thai(Alexander_Albon)
+American(Logan_Sargeant)
+Japanese(Yuki_Tsunoda)
+Canadian(Lance_Stroll)
 "WinsChampionship(Max_Verstappen,2024)"
 "WinsChampionship(Max_Verstappen,2023)"
 "WinsChampionship(Max_Verstappen,2022)"
@@ -58,15 +119,3 @@ Race(Monaco_GP)
 Race(British_GP)
 Race(Italian_GP)
 Race(Belgian_GP)
-"all x y.(DrivesFor(x,y) & Team(y) -> DriverForTeam(x,y))"
-"all x y.(HostedAt(x,y) & Circuit(y) -> RaceAtCircuit(x,y))"
-"DrivesFor(Sergio_Perez,Red_Bull)"
-Fast(Lando_Norris)
-Not_Max_Verstappen(American)
-Driver(Hamilton)
-In_Italy(Ferrari)
-Located_In_Italy(Ferrari)
-"DrivesFor(Oscar_Piastri,Mclaren)"
-British_Gp(George_Russell)
-Australian(Oscar_Piastri)
-British_Gp(Max_Verstappen)

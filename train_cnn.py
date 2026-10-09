@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-data_dir = '../archive (1)/F1_new_upd_car_data/'
+data_dir = r'C:\Users\obiko\Downloads\archive (2)\F1_new_upd_car_data'
 img_size = (150, 150)
 batch_size = 16
 epochs = 15

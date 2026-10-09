@@ -6,8 +6,6 @@ import math
 import requests
 from bs4 import BeautifulSoup
 
-# I built this PositionalEncoding layer from scratch to help my transformer 
-# understand word order without using recurrence.
 class PositionalEncoding(layers.Layer):
     def __init__(self, d_model, max_len=5000):
         super(PositionalEncoding, self).__init__()
@@ -24,8 +22,6 @@ class PositionalEncoding(layers.Layer):
         seq_len = tf.shape(x)[1]
         return x + self.pos_enc[:, :seq_len, :]
 
-# My MultiHeadSelfAttention implementation allows my model to focus 
-# on different parts of the F1 sentence structure concurrently.
 class MultiHeadSelfAttention(layers.Layer):
     def __init__(self, d_model, num_heads):
         super(MultiHeadSelfAttention, self).__init__()
@@ -87,8 +83,7 @@ class TransformerBlock(layers.Layer):
         ffn_output = self.dropout2(ffn_output, training=training)
         return self.layernorm2(out1 + ffn_output)
 
-# This is my custom 'Tiny Transformer' architecture. I've integrated 
-# my custom embeddings and attention layers to create a domain-specific model.
+# Tiny transformer language model built from scratch for F1 commentary generation.
 class TinyTransformerLM(keras.Model):
     def __init__(self, vocab_size, d_model, num_heads, d_ff, num_layers, max_len):
         super(TinyTransformerLM, self).__init__()
@@ -124,7 +119,7 @@ word2idx = {word: idx for idx, word in enumerate(vocab)}
 idx2word = {idx: word for word, idx in word2idx.items()}
 encoded_text = [word2idx[word] for word in tokens]
 
-sequence_length = 10
+sequence_length = 20
 inputs = []
 targets = []
 
@@ -155,35 +150,59 @@ loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer=optimizer, loss=loss_object)
 
-epochs = 5
+epochs = 15
 model.fit(dataset, epochs=epochs)
 
-def generate_text(model, start_text, gen_length=20):
+def generate_text(model, start_text, gen_length=20, temperature=1.4, top_k=40, repetition_penalty=1.8):
     tokens_start = start_text.lower().split()
     input_seq = [word2idx[word] for word in tokens_start if word in word2idx]
     if not input_seq:
         input_seq = [0]
     input_seq = tf.expand_dims(input_seq, 0)
     generated = list(tokens_start)
-    last_word = generated[-1] if generated else ""
+    recent_ids = list(input_seq[0].numpy())
+
     for _ in range(gen_length):
         predictions = model(input_seq, training=False)
-        last_logits = predictions[0, -1, :]
-        predicted_id = tf.random.categorical(tf.expand_dims(last_logits, 0), num_samples=1)[0, 0].numpy()
+        logits = predictions[0, -1, :].numpy()
+
+        # Repetition penalty: reduce the score of tokens already generated
+        for token_id in set(recent_ids):
+            if logits[token_id] > 0:
+                logits[token_id] /= repetition_penalty
+            else:
+                logits[token_id] *= repetition_penalty
+
+        logits = logits / temperature
+
+        # Top-k filtering: restrict sampling to the k most likely tokens
+        top_k_actual = min(top_k, len(logits))
+        top_k_indices = np.argpartition(logits, -top_k_actual)[-top_k_actual:]
+        mask = np.full_like(logits, -1e10)
+        mask[top_k_indices] = logits[top_k_indices]
+        logits = mask
+
+        logits_tensor = tf.constant(logits, dtype=tf.float32)
+        predicted_id = tf.random.categorical(
+            tf.expand_dims(logits_tensor, 0), num_samples=1
+        )[0, 0].numpy()
+
         new_word = idx2word[predicted_id]
-        if new_word != last_word:
-            generated.append(new_word)
-        last_word = new_word
+        generated.append(new_word)
+        recent_ids.append(int(predicted_id))
+
+        if new_word in {'.', '!', '?'}:
+            break
+
         input_seq = tf.concat([input_seq, tf.expand_dims([predicted_id], 0)], axis=1)
         if input_seq.shape[1] > sequence_length:
             input_seq = input_seq[:, -sequence_length:]
+
     return " ".join(generated)
 
 def generate_f1_commentary(start_text):
     return "[Transformer Mode]: " + generate_text(model, start_text, gen_length=20)
 
-# I implemented this sentiment analyzer to detect emotional keywords. 
-# This allows the bot to acknowledge the user's tone before generating a response.
 def analyze_sentiment(text):
     text = text.lower()
     score = 0
