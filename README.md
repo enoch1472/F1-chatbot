@@ -95,5 +95,11 @@ CNN
 Azure Computer Vision
 <img width="1918" height="877" alt="Azure Computer Vision" src="https://github.com/user-attachments/assets/4f693ac5-40c1-41a9-8c41-9673fb1c91c0" />
 
+Sentiment
+<img width="1918" height="872" alt="Sentiment" src="https://github.com/user-attachments/assets/51aa3eac-169e-4728-807d-b81b32a473e8" />
 
+Transformer
+<img width="1918" height="872" alt="Sentiment" src="https://github.com/user-attachments/assets/1eb3a81a-912d-46a1-9fe5-78b80470849e" />
 
+Fuzzy
+<img width="1918" height="921" alt="Fuzzy" src="https://github.com/user-attachments/assets/c084b238-5fc1-48a7-ad67-dca75d9f7c70" />
