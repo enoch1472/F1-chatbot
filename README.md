@@ -73,3 +73,21 @@ For image classification, type Classify image and pick a car photo from the file
 For the transformer, type Tell me about Monza.
 
 For sentiment testing, type Analyze sentiment I love this race and it will return Positive. Try Analyze sentiment that crash was terrible for Negative.
+
+
+Screenshots and results
+
+Here are screenshots showing the chatbot in action across different features.
+
+General conversation and question answering
+![General conversation and question answering](images/general_qa.png)
+
+Convolutional neural network car classification
+![Convolutional neural network car classification](images/cnn_classification.png)
+
+Azure computer vision cloud analysis
+![Azure computer vision cloud analysis](images/azure_analysis.png)
+
+Sentiment detection and transformer commentary
+![Sentiment detection and transformer commentary](images/sentiment_transformer.png)
+
