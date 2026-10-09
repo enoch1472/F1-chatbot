@@ -79,15 +79,16 @@ Screenshots and results
 
 Here are screenshots showing the chatbot in action across different features.
 
-General conversation and question answering
-![General conversation and question answering](images/general_qa.png)
+AIML
+![AIML](images/AIML.png)
 
-Convolutional neural network car classification
-![Convolutional neural network car classification](images/cnn_classification.png)
+QA
+![QA](images/QA.png)
 
-Azure computer vision cloud analysis
-![Azure computer vision cloud analysis](images/azure_analysis.png)
+CNN
+![CNN](images/CNN.png)
 
-Sentiment detection and transformer commentary
-![Sentiment detection and transformer commentary](images/sentiment_transformer.png)
+Azure Computer Vision
+![Azure Computer Vision](images/Azure_Computer_Vision.png)
+
 
