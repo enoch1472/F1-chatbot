@@ -80,15 +80,20 @@ Screenshots and results
 Here are screenshots showing the chatbot in action across different features.
 
 AIML
-![AIML](images/AIML.png)
+<img width="1917" height="975" alt="AIML" src="https://github.com/user-attachments/assets/cf9e4739-2eac-4138-aef4-7740a7478bc1" />
+
 
 QA
-![QA](images/QA.png)
+ <img width="1918" height="968" alt="QA" src="https://github.com/user-attachments/assets/5d9f6010-9fd2-494d-9fbe-b4fe6a30cbd2" />
+
 
 CNN
-![CNN](images/CNN.png)
+<img width="1918" height="968" alt="CNN" src="https://github.com/user-attachments/assets/9bb20229-7d5f-44f6-a76c-020f14032219" />
+
+
 
 Azure Computer Vision
-![Azure Computer Vision](images/Azure_Computer_Vision.png)
+<img width="1918" height="877" alt="Azure Computer Vision" src="https://github.com/user-attachments/assets/4f693ac5-40c1-41a9-8c41-9673fb1c91c0" />
+
 
 
