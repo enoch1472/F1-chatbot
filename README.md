@@ -8,6 +8,42 @@ This is a command-line chatbot about Formula 1 that I built for my AI coursework
 
 When you type something, the bot first tries to match it against a pattern in the AIML file. That handles greetings, goodbyes and the trigger words for each feature. If nothing matches exactly, it falls back to a similarity search or generates a response using the transformer.
 
+System Architecture
+
+I designed the chatbot as a multi-technique AI system where all of my models and algorithms run inside one unified chat loop in `mybot-f1.py`:
+
+```mermaid
+flowchart TD
+    User(["User Input"]) --> Loop["My Chat Loop (mybot-f1.py)"]
+    Loop --> AIML{"AIML Matcher"}
+    AIML -- Direct Match --> Out(["Response"])
+    AIML -- "#31 / #32" --> Logic["My Logic & KB Engine\n(NLTK + Forward Chaining)"]
+    AIML -- "#40" --> CNN["My Livery CNN + Fuzzy Confidence"]
+    AIML -- "#50 / #51" --> Fuzzy["My Fuzzy Championship System"]
+    AIML -- "#60" --> GA["My Genetic Algorithm (TSP Calendar)"]
+    AIML -- "#81" --> Azure["Azure Cloud Vision API"]
+    AIML -- "#82" --> Transformer["My Scratch-Built Transformer LM"]
+    AIML -- "#99 (Fallback)" --> Fallback["QA Search (TF-IDF) or Transformer"]
+    
+    Logic --> Out
+    CNN --> Out
+    Fuzzy --> Out
+    GA --> Out
+    Azure --> Out
+    Transformer --> Out
+    Fallback --> Empathy{"Negative Tone?"}
+    Empathy -- Yes --> EmpReply["Empathetic Note + Answer"] --> Out
+    Empathy -- No --> Out
+```
+
+How I built my architecture:
+
+- **Dialogue routing (AIML & Python)**: I use an AIML kernel to pattern-match inputs. It handles everyday greetings or returns command tags that route the input to one of my dedicated AI modules.
+- **Knowledge base & logic (NLTK)**: I built a First-Order Logic engine using `kb.csv` and dynamic user facts. I use forward chaining to deduce new facts (like identifying Italian teams) and NLTK's resolution prover to verify statements and prevent contradictions.
+- **Fuzzy logic & Genetic Algorithm**: I created two Mamdani fuzzy systems in `simpful` (one estimating championship likelihood from skill and experience, and another scoring CNN confidence) and a Genetic Algorithm to optimize the race calendar route.
+- **Computer vision (CNN & Azure)**: I designed and trained a 4-layer CNN in Keras to classify 10 team liveries locally, and integrated Azure Computer Vision for cloud captioning and brand detection.
+- **Language modeling & fallback (TF-IDF & Transformer)**: For general questions, my bot searches `qa.csv` using TF-IDF cosine similarity. If there is no close match, my scratch-built Transformer generates commentary. If my sentiment check spots a negative tone, I prepend an empathetic note to the response.
+
 Setup
 
 You need Python 3.10, 3.11 or 3.12. Install the dependencies by running this in your terminal:
