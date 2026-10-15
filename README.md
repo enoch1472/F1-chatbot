@@ -65,7 +65,6 @@ I know that Fast is Lando Norris
 
 These give Correct, Incorrect, Correct, Correct, a message that the fact contradicts what the bot already knows, and a message that it does not recognise "Fast".
 
-<!-- Drag your Logic screenshot here -->
 Fuzzy logic
 
 The fuzzy logic side takes a skill level from zero to ten and an experience value from zero to twenty years, then runs them through a Mamdani fuzzy system built with simpful to give a championship likelihood percentage. A second fuzzy system converts the CNN's raw probability into a Low, Medium or High confidence label.
@@ -86,7 +85,6 @@ The genetic algorithm treats the race calendar as a travelling salesman problem 
 Try:
 
 Optimize race calendar
-<!-- Drag your Genetic Algorithm screenshot here -->
 Image classification (CNN)
 
 The image classifier is a convolutional neural network trained to recognise ten F1 team liveries: AlphaTauri, Aston Martin, Ferrari, Lotus, McLaren, Mercedes, Racing Point, Red Bull, Renault and Williams. A file browser opens so you can pick any photo, and the network tells you which team it thinks the car belongs to, along with a Low, Medium or High confidence label.
