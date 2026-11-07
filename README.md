@@ -17,12 +17,12 @@ flowchart TD
     User(["User Input"]) --> Loop["My Chat Loop (mybot-f1.py)"]
     Loop --> AIML{"AIML Matcher"}
     AIML -- Direct Match --> Out(["Response"])
-    AIML -- "#31 / #32" --> Logic["My Logic & KB Engine\n(NLTK + Forward Chaining)"]
-    AIML -- "#40" --> CNN["My Livery CNN + Fuzzy Confidence"]
-    AIML -- "#50 / #51" --> Fuzzy["My Fuzzy Championship System"]
-    AIML -- "#81" --> Azure["Azure Cloud Vision API"]
-    AIML -- "#82" --> Transformer["My Scratch-Built Transformer LM"]
-    AIML -- "#99 (Fallback)" --> Fallback["QA Search (TF-IDF) or Transformer"]
+    AIML -- "Logic Match" --> Logic["My Logic & KB Engine\n(NLTK + Forward Chaining)"]
+    AIML -- "Image Classification" --> CNN["My Livery CNN + Fuzzy Confidence"]
+    AIML -- "Championship Prediction" --> Fuzzy["My Fuzzy Championship System"]
+    AIML -- "Cloud Vision" --> Azure["Azure Cloud Vision API"]
+    AIML -- "Generated Commentary" --> Transformer["My Scratch-Built Transformer LM"]
+    AIML -- "Fallback" --> Fallback["QA Search (TF-IDF) or Transformer"]
     
     Logic --> Out
     CNN --> Out
