@@ -11,7 +11,7 @@ try:
 except ImportError:
     AZURE_ENABLED = False
 
-AZURE_KEY = 'BPf63DwMamB8E5h39saFI4b0Qc1bDuPJ5BPLdJ8uK1Cp2dCoZXH5JQQJ99BCACmepeSXJ3w3AAAFACOGUqNa'
+AZURE_KEY = 'YOUR_AZURE_KEY_HERE'
 AZURE_ENDPOINT = 'https://labcvresource.cognitiveservices.azure.com/'
 def get_cascade_path(filename):
     import sys
@@ -38,8 +38,8 @@ def get_cascade_path(filename):
         potential = glob(os.path.join(folder, 'cv2', filename))
         if potential: return potential[0]
     return filename
-# Task C Extra: My Azure Cloud integration. 
-# I am using Microsoft's Computer Vision API here to perform advanced 
+# Azure Cloud integration. 
+# Uses Microsoft's Computer Vision API to perform advanced 
 # analysis like brand detection and natural language captioning.
 def azure_analyze_image(image_source):
     if not AZURE_ENABLED:

@@ -1,4 +1,4 @@
-# F1 Chatbot - ISYS30221 Artificial Intelligence Coursework - Enoch Obikoya (T0433803)
+# F1 Chatbot - Enoch Obikoya
 import os
 import warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
@@ -16,16 +16,22 @@ if not hasattr(time, 'clock'):
 import aiml
 import pandas
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, scrolledtext
+import threading
+try:
+    from PIL import Image, ImageTk
+except ImportError:
+    Image = None
+    ImageTk = None
 try:
     import tensorflow as tf
     from tensorflow.keras.models import load_model
-    from tensorflow.keras.preprocessing import image
+    from tensorflow.keras.preprocessing import image as keras_image
     tf.get_logger().setLevel('ERROR')
 except ImportError:
     tf = None
     load_model = None
-    image = None
+    keras_image = None
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 try:
@@ -333,103 +339,6 @@ def fuzzy_championship_likelihood(skill_val, experience_val):
     result = FS.Mamdani_inference(["Likelihood"])
     return result["Likelihood"]
 
-class RaceCalendarOptimizer:
-    """
-    Genetic Algorithm (GA) optimizer for the Travelling Salesperson Problem (TSP)
-    applied to ordering Formula 1 Grand Prix calendar locations to minimise total travel distance.
-    """
-    def __init__(self, locations=None, names=None, pop_size=50, generations=100, mutation_rate=0.15, elite_size=2):
-        self.locations = locations or [
-            (0,0), (10,50), (40,20), (80,70), (20,90), (60,10)
-        ]
-        self.names = names or ["Silverstone", "Monaco", "Monza", "Spa", "Suzuka", "Interlagos"]
-        self.pop_size = pop_size
-        self.generations = generations
-        self.mutation_rate = mutation_rate
-        self.elite_size = elite_size
-
-    def calculate_total_dist(self, order):
-        d = 0.0
-        n = len(order)
-        for i in range(n):
-            c1 = self.locations[order[i]]
-            c2 = self.locations[order[(i+1) % n]]
-            d += np.hypot(c1[0]-c2[0], c1[1]-c2[1])
-        return d
-
-    def _crossover_ox(self, parent1, parent2):
-        """Order Crossover (OX) preserving permutation validity for TSP."""
-        import random
-        size = len(parent1)
-        a, b = sorted(random.sample(range(size), 2))
-        child = [None] * size
-        child[a:b+1] = parent1[a:b+1]
-        
-        current_idx = (b + 1) % size
-        for gene in parent2[b+1:] + parent2[:b+1]:
-            if gene not in child:
-                child[current_idx] = gene
-                current_idx = (current_idx + 1) % size
-        return child
-
-    def _mutate(self, order):
-        """Inversion (2-opt style) mutation to reverse an edge sub-sequence."""
-        import random
-        if random.random() < self.mutation_rate:
-            a, b = sorted(random.sample(range(len(order)), 2))
-            order[a:b+1] = reversed(order[a:b+1])
-        return order
-
-    def _tournament_select(self, population, k=3):
-        """Tournament selection selecting the tour with the lowest travel distance."""
-        import random
-        selected = random.sample(population, k)
-        return min(selected, key=self.calculate_total_dist)
-
-    def optimize(self):
-        """
-        Executes the Genetic Algorithm:
-        - Population initialization with random permutation tours
-        - Generational evolution with Elitism, OX crossover, and inversion mutation
-        - Returns the best circuit order and minimum total distance found.
-        """
-        import random
-        n = len(self.locations)
-        if n <= 1:
-            return self.names, 0.0
-
-        base = list(range(n))
-        population = [random.sample(base, n) for _ in range(self.pop_size)]
-
-        best_individual = min(population, key=self.calculate_total_dist)
-        best_dist = self.calculate_total_dist(best_individual)
-
-        for _ in range(self.generations):
-            population.sort(key=self.calculate_total_dist)
-            current_best = population[0]
-            current_best_dist = self.calculate_total_dist(current_best)
-            if current_best_dist < best_dist:
-                best_dist = current_best_dist
-                best_individual = current_best[:]
-
-            next_pop = [population[i][:] for i in range(self.elite_size)]
-
-            while len(next_pop) < self.pop_size:
-                p1 = self._tournament_select(population)
-                p2 = self._tournament_select(population)
-                child = self._crossover_ox(p1, p2)
-                child = self._mutate(child)
-                next_pop.append(child)
-
-            population = next_pop
-
-        population.sort(key=self.calculate_total_dist)
-        if self.calculate_total_dist(population[0]) < best_dist:
-            best_dist = self.calculate_total_dist(population[0])
-            best_individual = population[0]
-
-        return [self.names[i] for i in best_individual], best_dist
-
 
 try:
     model = load_model('Enoch_F1_trained.h5')
@@ -469,28 +378,24 @@ def fuzzy_classification_confidence(prob_val):
     label = "Low" if conf_score < 40 else "Medium" if conf_score < 75 else "High"
     return conf_score, label
 def azure_cloud_classify():
-    root = tk.Tk()
-    root.withdraw()
     path = filedialog.askopenfilename(
         title="Select an image for Azure Cloud Analysis",
         filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp")])
-    if not path: return "No image selected."
+    if not path: return "No image selected.", None
     if my_azure_cognitve is not None and hasattr(my_azure_cognitve, 'azure_analyze_image'):
-        return my_azure_cognitve.azure_analyze_image(path)
-    return "Azure Vision module not available. Install azure-cognitiveservices-vision-computervision."
+        return my_azure_cognitve.azure_analyze_image(path), path
+    return "Azure Vision module not available. Install azure-cognitiveservices-vision-computervision.", path
 
 def classify_image():
     import tensorflow as tf
-    root = tk.Tk()
-    root.withdraw()
     path = filedialog.askopenfilename(
         title="Select an F1 car image to classify",
         filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp")])
     if not path:
         return "No image selected."
     if model:
-        img = image.load_img(path, target_size=(150, 150))
-        img_tensor = image.img_to_array(img)
+        img = keras_image.load_img(path, target_size=(150, 150))
+        img_tensor = keras_image.img_to_array(img)
         img_tensor = np.expand_dims(img_tensor, axis=0)
         img_tensor /= 255.0
         logits = model.predict(img_tensor, verbose=0)
@@ -499,9 +404,9 @@ def classify_image():
         prob_val = probs[idx]
         conf_percent, conf_label = fuzzy_classification_confidence(prob_val)
         team = classes[idx].replace(" F1 car", "").replace(" F1 Car", "").strip()
-        return f"I think this is a {team} F1 car ({conf_percent:.1f}% confidence - {conf_label})."
+        return f"I think this is a {team} F1 car ({conf_percent:.1f}% confidence - {conf_label}).", path
     else:
-        return "Sorry, the image classification model is not loaded."
+        return "Sorry, the image classification model is not loaded.", path
 kern = aiml.Kernel()
 kern.setTextEncoding(None)
 orig_stdout = sys.stdout
@@ -510,92 +415,246 @@ try:
     kern.bootstrap(learnFiles="mybot-basic.aiml")
 finally:
     sys.stdout = orig_stdout
-while True:
-    try:
-        userInput = input("> ").strip()
-    except (KeyboardInterrupt, EOFError):
-        print("Bye!")
-        break
-    if not userInput:
-        continue
-    responseAgent = 'aiml'
-    if responseAgent == 'aiml':
-        answer = kern.respond(userInput)
-    if answer and answer[0] == '#':
-        params = answer[1:].split('$')
-        cmd = int(params[0])
-        if cmd == 0:
-            print(params[1])
-            break
-        elif cmd == 31:
-            fact_str = re.sub(r'(?i)^i know that\s+', '', userInput)
-            print(add_fact(fact_str))
-        elif cmd == 32:
-            fact_str = re.sub(r'(?i)^check that\s+', '', userInput)
-            print(check_fact(fact_str))
-        elif cmd == 40:
-            print(classify_image())
-        elif cmd == 50:
-            driver_name = params[1].strip().lower() if len(params) > 1 else ""
-            if not FUZZY_ENABLED:
-                print("Fuzzy logic system not available. Install simpful.")
-            elif driver_name in driver_profiles:
-                skill_val, exp_val = driver_profiles[driver_name]
-                likelihood = fuzzy_championship_likelihood(skill_val, exp_val)
-                label = "unlikely" if likelihood < 33 else "possible" if likelihood < 66 else "likely"
-                print(f"Championship likelihood for {driver_name.title()}: {likelihood:.1f}% ({label})")
-            else:
-                known = ", ".join(set(n.title() for n in driver_profiles if ' ' not in n))
-                print(f"I don't have a profile for that driver. Known drivers: {known}")
-                print("Or try: 'How likely skill [0-10] experience [0-20]'")
-        elif cmd == 51:
-            user_text = params[1].strip() if len(params) > 1 else ""
-            m = re.search(r'skill\s*(\d+)\s*experience\s*(\d+)', user_text.lower())
-            if m and FUZZY_ENABLED:
-                skill_val = min(float(m.group(1)), 10)
-                exp_val = min(float(m.group(2)), 20)
-                likelihood = fuzzy_championship_likelihood(skill_val, exp_val)
-                label = "unlikely" if likelihood < 33 else "possible" if likelihood < 66 else "likely"
-                print(f"Championship likelihood: {likelihood:.1f}% ({label})")
-            elif not FUZZY_ENABLED:
-                print("Fuzzy logic system not available. Install simpful.")
-            else:
-                print("Usage: How likely skill [0-10] experience [0-20]")
-        elif cmd == 60:
-            optimizer = RaceCalendarOptimizer()
-            order, distance = optimizer.optimize()
-            print(f"Optimized Race Calendar (GA): {' -> '.join(order)}")
-            print(f"Total Travel Distance: {distance:.2f} units")
+class F1ChatBotGUI:
+    COLOR_BG = "#1e1e1e"
+    COLOR_FG = "#ffffff"
+    FONT_FAMILY = "Segoe UI"
 
-        elif cmd == 75:
-            sentiment = get_sentiment(userInput)
-            print(f"I sense that you are feeling: {sentiment}")
-        elif cmd == 76:
-            test_text = params[1].strip() if len(params) > 1 else userInput
-            sentiment = get_sentiment(test_text)
-            positive_words = {'great', 'win', 'champion', 'fast', 'amazing', 'happy', 'love', 'perfect', 'best'}
-            negative_words = {'bad', 'crash', 'fail', 'slow', 'sad', 'hate', 'lose', 'worst', 'terrible'}
-            found = [w for w in test_text.lower().split() if w in positive_words | negative_words]
-            detail = f" (detected keywords: {', '.join(found)})" if found else ""
-            print(f"Sentiment of \"{test_text}\": {sentiment}{detail}")
-        elif cmd == 81:
-            print(azure_cloud_classify())
-        elif cmd == 82:
-            seed = params[1].strip() if len(params) > 1 else "F1"
-            print(get_commentary(seed))
-        elif cmd == 99:
-            fallback = params[1].strip() if len(params) > 1 else userInput
-            sentiment = get_sentiment(fallback)
-            
-            f_lower = fallback.lower()
-            res = (qa.get(normalise(fallback))
-                   or similarity_match(fallback, threshold=0.7)
-                   or get_commentary(fallback))
-            if sentiment == "Negative":
-                print(f"(I'm sorry to hear that...) {res}")
+    def __init__(self, root):
+        self.root = root
+        self.root.title("F1 Chatbot")
+        self.root.geometry("820x700")
+        self.root.minsize(600, 500)
+        self.root.configure(bg=self.COLOR_BG)
+        self._image_refs = []
+
+        header = tk.Frame(root, bg=self.COLOR_BG, height=50)
+        header.pack(fill=tk.X)
+        header.pack_propagate(False)
+        tk.Label(header, text="Formula 1 Chatbot",
+                 font=(self.FONT_FAMILY, 16, "bold"),
+                 bg=self.COLOR_BG, fg=self.COLOR_FG).pack(side=tk.LEFT, padx=16)
+        tk.Label(header, text="Powered by AIML, CNN, Fuzzy Logic, Transformer",
+                 font=(self.FONT_FAMILY, 9),
+                 bg=self.COLOR_BG, fg=self.COLOR_FG).pack(side=tk.RIGHT, padx=16)
+
+        tk.Frame(root, bg=self.COLOR_FG, height=1).pack(fill=tk.X)
+
+        chat_frame = tk.Frame(root, bg=self.COLOR_BG)
+        chat_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(6, 0))
+        self.chat_display = scrolledtext.ScrolledText(
+            chat_frame, wrap=tk.WORD, state=tk.DISABLED,
+            bg=self.COLOR_BG, fg=self.COLOR_FG,
+            font=(self.FONT_FAMILY, 11), relief=tk.FLAT,
+            padx=12, pady=10, insertbackground=self.COLOR_FG,
+            selectbackground=self.COLOR_FG, selectforeground=self.COLOR_BG)
+        self.chat_display.pack(fill=tk.BOTH, expand=True)
+
+        self.chat_display.tag_configure("bot_name", foreground=self.COLOR_FG,
+                                        font=(self.FONT_FAMILY, 11, "bold"))
+        self.chat_display.tag_configure("user_name", foreground=self.COLOR_FG,
+                                        font=(self.FONT_FAMILY, 11, "bold"))
+        self.chat_display.tag_configure("bot_text", foreground=self.COLOR_FG,
+                                        font=(self.FONT_FAMILY, 11))
+        self.chat_display.tag_configure("user_text", foreground=self.COLOR_FG,
+                                        font=(self.FONT_FAMILY, 11))
+        self.chat_display.tag_configure("system", foreground=self.COLOR_FG,
+                                        font=(self.FONT_FAMILY, 10, "italic"))
+
+        btn_bar = tk.Frame(root, bg=self.COLOR_BG)
+        btn_bar.pack(fill=tk.X, padx=10, pady=(6, 0))
+        quick_actions = [
+            ("Classify Image", "classify image"),
+            ("Azure Analyze", "cloud analyze image"),
+            ("Championship", "how likely is verstappen to win the championship"),
+            ("Help", "help"),
+        ]
+        for label, cmd in quick_actions:
+            b = tk.Button(btn_bar, text=label, font=(self.FONT_FAMILY, 9),
+                          bg=self.COLOR_FG, fg=self.COLOR_BG,
+                          activebackground=self.COLOR_BG, activeforeground=self.COLOR_FG,
+                          relief=tk.FLAT, cursor="hand2", bd=0, padx=10, pady=4,
+                          command=lambda c=cmd: self._quick_send(c))
+            b.pack(side=tk.LEFT, padx=3)
+
+        input_frame = tk.Frame(root, bg=self.COLOR_BG)
+        input_frame.pack(fill=tk.X, padx=10, pady=10)
+        self.user_input = tk.Entry(
+            input_frame, font=(self.FONT_FAMILY, 13),
+            bg=self.COLOR_BG, fg=self.COLOR_FG, insertbackground=self.COLOR_FG,
+            highlightbackground=self.COLOR_FG, highlightcolor=self.COLOR_FG,
+            highlightthickness=1, relief=tk.FLAT, bd=0)
+        self.user_input.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=8, padx=(0, 8))
+        self.user_input.bind("<Return>", lambda e: self._on_send())
+        send_btn = tk.Button(
+            input_frame, text="Send", font=(self.FONT_FAMILY, 11, "bold"),
+            bg=self.COLOR_FG, fg=self.COLOR_BG,
+            activebackground=self.COLOR_BG, activeforeground=self.COLOR_FG,
+            relief=tk.FLAT, cursor="hand2", padx=18, pady=6, bd=0,
+            command=self._on_send)
+        send_btn.pack(side=tk.RIGHT)
+
+        self._append_system("Welcome to the F1 Chatbot! Type a message or tap a button above.")
+        self._append_bot("Hello! I am your F1 chatbot. Ask me about Formula 1 - drivers, teams, circuits, or anything F1!\n\nTip: type help to see everything I can do.")
+        self.user_input.focus_set()
+
+    def _append_bot(self, text):
+        self.chat_display.configure(state=tk.NORMAL)
+        self.chat_display.insert(tk.END, "Bot: ", "bot_name")
+        self.chat_display.insert(tk.END, text + "\n\n", "bot_text")
+        self.chat_display.configure(state=tk.DISABLED)
+        self.chat_display.see(tk.END)
+
+    def _append_user(self, text):
+        self.chat_display.configure(state=tk.NORMAL)
+        self.chat_display.insert(tk.END, "You: ", "user_name")
+        self.chat_display.insert(tk.END, text + "\n\n", "user_text")
+        self.chat_display.configure(state=tk.DISABLED)
+        self.chat_display.see(tk.END)
+
+    def _append_system(self, text):
+        self.chat_display.configure(state=tk.NORMAL)
+        self.chat_display.insert(tk.END, text + "\n\n", "system")
+        self.chat_display.configure(state=tk.DISABLED)
+        self.chat_display.see(tk.END)
+
+    def _show_image_thumbnail(self, path):
+        if Image is None or ImageTk is None:
+            return
+        try:
+            img = Image.open(path)
+            img.thumbnail((220, 220))
+            photo = ImageTk.PhotoImage(img)
+            self._image_refs.append(photo)
+            def _insert():
+                self.chat_display.configure(state=tk.NORMAL)
+                self.chat_display.image_create(tk.END, image=photo)
+                self.chat_display.insert(tk.END, "\n", "bot_text")
+                self.chat_display.configure(state=tk.DISABLED)
+                self.chat_display.see(tk.END)
+            self.root.after(0, _insert)
+        except Exception:
+            pass
+
+    def _quick_send(self, text):
+        self.user_input.delete(0, tk.END)
+        self.user_input.insert(0, text)
+        self._on_send()
+
+    def _on_send(self):
+        user_text = self.user_input.get().strip()
+        if not user_text:
+            return
+        self.user_input.delete(0, tk.END)
+        self._append_user(user_text)
+        threading.Thread(target=self._generate_response, args=(user_text,), daemon=True).start()
+
+    def _generate_response(self, userInput):
+        try:
+            response_text = self._process_input(userInput)
+        except Exception as exc:
+            response_text = f"An error occurred: {exc}"
+        self.root.after(0, self._append_bot, response_text)
+
+    def _process_input(self, userInput):
+        answer = kern.respond(userInput)
+
+        if answer and answer[0] == '#':
+            params = answer[1:].split('$')
+            cmd = int(params[0])
+
+            if cmd == 0:
+                self.root.after(500, self.root.destroy)
+                return params[1]
+
+            elif cmd == 31:
+                fact_str = re.sub(r'(?i)^i know that\s+', '', userInput)
+                return add_fact(fact_str)
+
+            elif cmd == 32:
+                fact_str = re.sub(r'(?i)^check that\s+', '', userInput)
+                return check_fact(fact_str)
+
+            elif cmd == 40:
+                result = classify_image()
+                if isinstance(result, tuple):
+                    text, path = result
+                    if path:
+                        self._show_image_thumbnail(path)
+                    return text
+                return result
+
+            elif cmd == 50:
+                driver_name = params[1].strip().lower() if len(params) > 1 else ""
+                if not FUZZY_ENABLED:
+                    return "Fuzzy logic system not available. Install simpful."
+                elif driver_name in driver_profiles:
+                    skill_val, exp_val = driver_profiles[driver_name]
+                    likelihood = fuzzy_championship_likelihood(skill_val, exp_val)
+                    label = "unlikely" if likelihood < 33 else "possible" if likelihood < 66 else "likely"
+                    return f"Championship likelihood for {driver_name.title()}: {likelihood:.1f}% ({label})"
+                else:
+                    known = ", ".join(set(n.title() for n in driver_profiles if ' ' not in n))
+                    return (f"I don't have a profile for that driver. Known drivers: {known}\n"
+                            "Or try: 'How likely skill [0-10] experience [0-20]'")
+
+            elif cmd == 51:
+                user_text = params[1].strip() if len(params) > 1 else ""
+                m = re.search(r'skill\s*(\d+)\s*experience\s*(\d+)', user_text.lower())
+                if m and FUZZY_ENABLED:
+                    skill_val = min(float(m.group(1)), 10)
+                    exp_val = min(float(m.group(2)), 20)
+                    likelihood = fuzzy_championship_likelihood(skill_val, exp_val)
+                    label = "unlikely" if likelihood < 33 else "possible" if likelihood < 66 else "likely"
+                    return f"Championship likelihood: {likelihood:.1f}% ({label})"
+                elif not FUZZY_ENABLED:
+                    return "Fuzzy logic system not available. Install simpful."
+                else:
+                    return "Usage: How likely skill [0-10] experience [0-20]"
+
+            elif cmd == 75:
+                sentiment = get_sentiment(userInput)
+                return f"I sense that you are feeling: {sentiment}"
+
+            elif cmd == 76:
+                test_text = params[1].strip() if len(params) > 1 else userInput
+                sentiment = get_sentiment(test_text)
+                positive_words = {'great', 'win', 'champion', 'fast', 'amazing', 'happy', 'love', 'perfect', 'best'}
+                negative_words = {'bad', 'crash', 'fail', 'slow', 'sad', 'hate', 'lose', 'worst', 'terrible'}
+                found = [w for w in test_text.lower().split() if w in positive_words | negative_words]
+                detail = f" (detected keywords: {', '.join(found)})" if found else ""
+                return f'Sentiment of "{test_text}": {sentiment}{detail}'
+
+            elif cmd == 81:
+                result = azure_cloud_classify()
+                if isinstance(result, tuple):
+                    text, path = result
+                    if path:
+                        self._show_image_thumbnail(path)
+                    return text
+                return result
+
+            elif cmd == 82:
+                seed = params[1].strip() if len(params) > 1 else "F1"
+                return get_commentary(seed)
+
+            elif cmd == 99:
+                fallback = params[1].strip() if len(params) > 1 else userInput
+                sentiment = get_sentiment(fallback)
+                res = (qa.get(normalise(fallback))
+                       or similarity_match(fallback, threshold=0.7)
+                       or get_commentary(fallback))
+                if sentiment == "Negative":
+                    return f"(I'm sorry to hear that...) {res}"
+                return res
+
             else:
-                print(res)
+                return "I did not get that, please try again."
         else:
-            print("I did not get that, please try again.")
-    else:
-        print(answer)
+            return answer
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = F1ChatBotGUI(root)
+    root.mainloop()

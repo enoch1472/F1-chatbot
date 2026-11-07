@@ -20,8 +20,8 @@ val_gen = datagen.flow_from_directory(data_dir, target_size=img_size, batch_size
 num_classes = len(train_gen.class_indices)
 classes = list(train_gen.class_indices.keys())
 print(f"Detected classes: {classes}")
-# Task C: Computer Vision - My Local 4-Layer Convolutional Neural Network
-# I designed this architecture to classify F1 car liveries by extracting 
+# Computer Vision - 4-Layer Convolutional Neural Network
+# Classifies F1 car liveries by extracting 
 # spatial features through increasing filter depths.
 model = keras.Sequential([
     layers.Input(shape=(150, 150, 3)),
