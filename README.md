@@ -2,6 +2,14 @@ Formula 1 Chatbot
 
 Written by Enoch Obikoya
 
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
+[![Framework: Tkinter](https://img.shields.io/badge/GUI-Tkinter-lightgrey)]()
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)]()
+
+A multi-technique Formula 1 AI chatbot featuring a desktop Tkinter GUI, AIML dialogue routing, First-Order Logic reasoning with forward chaining, Fuzzy Logic championship predictions, deep Convolutional Neural Network (CNN) car livery classification, Azure Cloud Computer Vision analysis, and a scratch-built Transformer commentary generator.
+
+Topics: `formula-1` · `chatbot` · `tkinter-gui` · `computer-vision` · `aiml` · `deep-learning` · `fuzzy-logic` · `first-order-logic` · `nlp` · `transformer` · `python`
+
 What this project is
 
 This is a chatbot about Formula 1. You talk to it by typing, and it responds with facts, predictions, image analysis and generated commentary. Each feature uses a different AI technique, and they all run together inside one chat loop.
@@ -46,7 +54,7 @@ Setup
 
 You need Python 3.10, 3.11 or 3.12. Install the dependencies by running this in your terminal:
 
-pip install tensorflow nltk simpful scikit-learn pandas numpy aiml beautifulsoup4 requests azure-cognitiveservices-vision-computervision msrest pillow opencv-python matplotlib
+pip install -r requirements.txt
 
 The NLTK language data downloads automatically on the first run.
 
@@ -62,7 +70,7 @@ Graphical User Interface (Tkinter GUI)
 
 I built a dedicated graphical user interface using Python's Tkinter library to give users an interactive desktop application for my F1 chatbot instead of relying solely on the command line. My GUI features a clean, high-contrast two-colour design (charcoal black and crisp white), a scrollable chat display, quick-action shortcut buttons for instant access to key features (Classify Image, Azure Analyze, Championship, and Help), and a threaded backend so image classification and cloud queries run smoothly without freezing the window.
 
-![F1 Chatbot GUI](GUI.png)
+![F1 Chatbot GUI](images/GUI.png)
 
 Features and how to test them
 
@@ -133,7 +141,7 @@ Training it yourself. Put your car images into a folder with one subfolder per t
 
 python train_cnn.py
 
-It trains for 15 epochs and saves the model as Enoch_F1_trained.h5. It also writes training_curves.png and confusion_matrix.png and prints a full classification report.
+It trains for 15 epochs and saves the model as Enoch_F1_trained.keras. It also writes images/training_curves.png and images/confusion_matrix.png and prints a full classification report.
 
 Transformer
 

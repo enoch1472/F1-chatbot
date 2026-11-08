@@ -3,3 +3,6 @@ __pycache__/
 archive/
 archive*/
 archive (2)/
+user_facts.csv
+.DS_Store
+*.h5

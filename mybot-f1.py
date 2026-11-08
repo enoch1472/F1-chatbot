@@ -341,7 +341,12 @@ def fuzzy_championship_likelihood(skill_val, experience_val):
 
 
 try:
-    model = load_model('Enoch_F1_trained.h5')
+    if os.path.exists('Enoch_F1_trained.keras'):
+        model = load_model('Enoch_F1_trained.keras')
+    elif os.path.exists('Enoch_F1_trained.h5'):
+        model = load_model('Enoch_F1_trained.h5')
+    else:
+        model = None
     classes = ['AlphaTauri', 'Aston Martin', 'Ferrari', 'Lotus', 'McLaren',
                'Mercedes', 'Racing Point', 'Red Bull', 'Renault', 'Williams']
 except Exception as e:

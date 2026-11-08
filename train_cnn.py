@@ -47,8 +47,8 @@ model.compile(optimizer='adam',
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 history = model.fit(train_gen, epochs=epochs, validation_data=val_gen)
-model.save('Enoch_F1_trained.h5')
-print("Model saved as Enoch_F1_trained.h5")
+model.save('Enoch_F1_trained.keras')
+print("Model saved as Enoch_F1_trained.keras")
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 ax1.plot(history.history['accuracy'], label='Train Accuracy')
 ax1.plot(history.history['val_accuracy'], label='Val Accuracy')
